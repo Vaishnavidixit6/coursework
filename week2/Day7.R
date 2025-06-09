@@ -132,19 +132,64 @@ a-b
 # Since the p-value is so big we fail to reject null hypothesis
 # because we don't have enough evidence to reject the null hypothesis, yawning is not contagious
 
-# 3.1
-# (a) The distribution of the sample proportions of vegetarians in random samples of size 60 is
-# approximately normal since n ≥ 30. 
-# False because, n>=30,  np>=10 which in this case is 4.8 !>=10, n(1-p) >=10
-# (b) The distribution of the sample proportions of vegetarian college students in random samples
-# of size 50 is right skewed.
-# 
-# (c) A random sample of 125 college students where 12% are vegetarians would be considered
-# unusual.
-# 
-# (d) A random sample of 250 college students where 12% are vegetarians would be considered
-# unusual.
-# 
-# (e) The standard error would be reduced by one-half if we increased the sample size from 125
-# to 250.
-# 
+# 9.2
+# 1
+exp <- 3.5
+sd_a <- 3
+sd_ia <- 1.5
+test = rep(0,10^2)
+for (i in 1:10^2){
+  X_a <- rnorm(29, exp, sd_a)
+  X_bar_a <- mean(X_a)
+  S_a <- sd(X_a)
+  X_ia <- rnorm(21, exp, sd_ia)
+  X_bar_ia <- mean(X_ia)
+  S_ia <- sd(X_ia)
+  test[i] <- (X_bar_a - X_bar_ia) / sqrt((S_a**2 / 29) + (S_ia**2 / 21))
+}
+
+mean(test)
+sd(test)
+qnorm(0.025, mean(test), sd(test))
+qnorm(0.975, mean(test), sd(test))
+
+# 2
+magnets = read.csv("C:/Users/ds3/Downloads/magnets.csv")
+nrow(magnets)
+X_bar_a = mean(magnets$change[1:29])
+X_bar_b = mean(magnets$change[30:50])
+Var_a = var(magnets$change[1:29])
+Var_b = var(magnets$change[30:50])
+test = (X_bar_a - X_bar_b) / sqrt((Var_a/29) + (Var_b/21))
+test
+# Not in the 95% interval
+
+# 12.1
+# 1
+# H_0: E(X) = 0
+# H_a: E(X) =! 0
+
+# 2
+# Only 30:50 as those are inactive placebo
+
+# 3
+exp <- mean(magnets$change[30:50])
+sd_a <- sd(magnets$change[30:50])
+X_bar_a = rep(0,10^2)
+for (i in 1:10^2){
+  X_a <- rnorm(21, exp, sd_a)
+  X_bar_a[i] <- mean(X_a)
+}
+mean(X_bar_a)
+sd(X_bar_a)
+qnorm(0.025, mean(X_bar_a), sd(X_bar_a))
+qnorm(0.975, mean(X_bar_a), sd(X_bar_a))
+t.test(magnets$change[30:50])
+# 95% interval doesn't have the null hypothesis so, reject the null hypothesis meaning that there is a difference in the mean values of the score of pain before and after the treatment for patients that were treated with the inactive placebo
+
+
+# 13.1
+# 1
+
+
+# 5.20

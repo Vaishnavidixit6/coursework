@@ -21,6 +21,7 @@ set.seed(42)
 Repeatedly flip a biased coin 100 times and estimate its bias.
 Adapted from Yakir 11.2.3.
 ```{r}
+library(ggplot2)
 estimate_coin_bias <- function(n, p) {
   mean(rbinom(n,1,p))
 }
