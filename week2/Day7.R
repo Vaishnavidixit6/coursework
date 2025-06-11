@@ -190,6 +190,105 @@ t.test(magnets$change[30:50])
 
 # 13.1
 # 1
+head(magnets)
+t.test(magnets$score1 ~ magnets$active) # failed to reject null
 
+#2
+var.test(magnets$score1 ~ magnets$active) # failed to reject null
+
+#3
+t.test(magnets$score2 ~ magnets$active) # reject null at 1% los
+
+#4
+var.test(magnets$score2 ~ magnets$active) # failed to reject null at 1% los
 
 # 5.20
+#1
+# m = slope = r * std y-axis / std x-axis
+# y-bar = m*x-bar + b
+m <- 0.67*(9.41 / 10.37)
+m
+b <- 171.14 - m*108.20
+b
+# y = 0.6078749 x + 105.3571
+
+#2
+# Intercept = If shoulder is 0 units then height will be 105.3571 units
+# Slope: For every unit change in shoulder girth, the height will increase by 0.6078749 units
+
+#3
+coeff_of_det <- 0.67**2
+coeff_of_det
+# The predictor variable / shoulder girth explains 44.89% of the changes in the dependent variable / height in inches
+
+#4 
+0.6078749*100 + 105.3571
+
+#5
+160 - (0.6078749*100 + 105.3571)
+# The predicted was -6.14459 units from the actual value
+
+#6
+# This linear model is not good for x = 56 cam because of the scale in x-axis starts at 80cm
+
+# 5.29
+# 1
+# For every unit change in height, the weight increases by 1.0176 units
+
+# 2
+# y-cap = 1.0176 x-cap - 105.0113
+# When height = 0 units then the weight is going to be 105.0113
+
+# 3
+# H_0: Beta_1 = 0
+# H_a: Beta_1 =! 0
+# p-value = 0.000
+# Since, p-value is less than 0.05, we can reject the null hypothesis meaning that height is a good predictor of height
+
+# 4
+coeff_of_det <- 0.72^2
+coeff_of_det
+# The predictor variable / height explains 51.84% of the changes in the dependent variable / weight in units
+
+
+# 3.6.2
+library(MASS)
+install.packages("ISLR")
+library(ISLR)
+
+fix(Boston)
+names(Boston)
+
+lm.fit=lm(medv ~ lstat)
+lm.fit=lm(medv ~ lstat, data = Boston)
+attach(Boston)
+lm.fit=lm(medv ~ lstat)
+lm.fit
+summary(lm.fit)
+
+names(lm.fit)
+coef(lm.fit)
+confint(lm.fit)
+
+predict(lm.fit ,data.frame(lstat=c(5,10 ,15)), interval = "confidence")
+predict (lm.fit ,data.frame(lstat=c(5,10 ,15)),interval ="prediction")
+# A confidence interval gives a range for the mean response at a given value of the predictor.
+# A prediction interval gives a range where you expect a new individual observation to fall, given the predictor value.
+plot(lstat ,medv)
+abline(lm.fit)
+abline(lm.fit ,lwd =3)
+abline(lm.fit ,lwd=3,col ="red") # line colored
+plot(lstat ,medv ,col="red") # points colored
+plot(lstat ,medv ,pch =20)
+plot(lstat ,medv ,pch ="+")
+plot(1:20,1:20,pch =1:20) # axis 1 to 20 scale and shapes at pch
+
+par(mfrow=c(2,2)) # it makes 2*2 format of the graphs
+plot(lm.fit)
+
+plot(predict(lm.fit), residuals(lm.fit))
+plot(predict(lm.fit), rstudent(lm.fit))
+
+plot(hatvalues(lm.fit)) # gives leverage value
+which.max(hatvalues (lm.fit)) # this shows the observation which has the highest leverage which can have potential to be influential
+
