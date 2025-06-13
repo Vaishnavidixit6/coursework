@@ -22,7 +22,7 @@ theme_set(theme_bw())
 
 Read data from the `ratings.csv` file
 ```{r load-data}
-ratings <- read_csv('ratings.csv',
+ratings <- read_delim('C:/Users/ds3/Downloads/ml-10m/ml-10M100K/ratings.dat', delim = '::',
                     col_names = c('user_id','movie_id','rating','timestamp'))
 ```
 
@@ -35,6 +35,8 @@ head(ratings) %>% kable()
 
 ```{r dist-ratings}
 # plot the distribution of rating values https://speakerdeck.com/jhofman/modeling-social-data-lecture-2-introduction-to-counting?slide=26
+View(ratings)
+ratings %>% group_by(rating) %>% ggplot( aes(x = rating)) + geom_histogram(binwidth = 0.25) + xlab('Rating') + ylab('Number of Ratings')
 ```
 
 ## Per-movie stats
@@ -42,24 +44,29 @@ head(ratings) %>% kable()
 ```{r aggregate-by-movie}
 # aggregate ratings by movie, computing mean rating and number of ratings
 # hint: use the n() function for easy counting within a group
+summary_movies <- ratings %>% group_by(movie_id) %>% summarise(mean = mean(rating), count = n())
+View(summary_movies)
 ```
 
 ```{r dist-movie-popularity}
 # plot distribution of movie popularity (= number of ratings the movie received)
 # hint: try scale_x_log10() for a logarithmic x axis
+summary_movies %>% ggplot( aes(x = count)) + geom_histogram(binwidth = 0.20) + scale_x_log10() + xlab('Number of Ratings') +ylab('Number of Movies')
 ```
 
 ```{r dist-mean-ratings-by-movie}
 # plot distribution of mean ratings by movie https://speakerdeck.com/jhofman/modeling-social-data-lecture-2-introduction-to-counting?slide=28
 # hint: try geom_histogram and geom_density
+summary_movies %>% ggplot(aes(x = mean)) + geom_density(fill = 'black') + xlab('Mean Ratings by Movie') + ylab('Density')
 ```
 
 ```{r cdf-movie-pop}
 # rank movies by popularity (number of ratings) and compute the cdf, or fraction of all views covered by the top-k movies https://speakerdeck.com/jhofman/modeling-social-data-lecture-2-introduction-to-counting?slide=30
 # hint: use dplyr's rank and arrange functions, and the base R sum and cumsum functions
 # store the result in a new data frame so you can use it in creating figure 2 from the paper below
-
+mutate(summary_movies, total = sum(count), cum_sum = cumsum(count), cdf = (cum_sum/total)) %>% arrange((cdf)) %>% mutate( rank = row_number(cdf)) %>% ggplot(aes(x = rank, y = cdf)) + geom_line(fill = 'black')
 # plot the CDF of movie popularity
+
 ```
 
 
@@ -67,11 +74,17 @@ head(ratings) %>% kable()
 
 ```{r aggregate-by-user}
 # aggregate ratings by user, computing mean and number of ratings
+View(ratings)
+str(ratings)
+rating_dt <- ratings %>% group_by(user_id) %>% summarize(mean = mean(rating), count = n()) |> arrange(desc(count))
+view(rating_dt)
 ```
 
 ```{r dist-user-activity}
 # plot distribution of user activity (= number of ratings the user made)
 # hint: try a log scale here
+rating_dt %>% ggplot(aes(x = count)) + geom_histogram() + scale_x_log10() + xlab('User ID') + ylab('Number of Ratings')
+
 ```
 
 # Anatomy of the long tail
@@ -91,4 +104,54 @@ head(ratings) %>% kable()
 # paper, produce one curve for the 100% user satisfaction level and
 # another for 90%---do not, however, bother implementing the null
 # model (shown in the dashed lines).
+
+head(ratings)
+
+ratings_movie <- ratings %>% group_by(movie_id) %>% summarise(count = n()) %>% arrange(desc(count)) %>%  mutate(rank_by_movies = row_number())
+
+rating_user <- inner_join(ratings,ratings_movie, by = c('movie_id'))
+head(rating_user)
+
+lets_See <- rating_user %>% select(- 'timestamp') %>% select(- 'count') %>% select(- 'rating') %>% group_by(user_id) %>% mutate(rank = row_number(rank_by_movies))%>% summarize(weirdest = max(rank_by_movies))
+lets_See
+
+library(ggplot2)
+
+# 100% Satisfaction
+# Define your function (no change needed here)
+my_function <- function(lets_See, x){
+  lets_See <- lets_See %>% mutate(is_satisfied = ifelse(weirdest <= x, 1, 0))
+  sum(lets_See$is_satisfied) / nrow(lets_See)
+}
+
+# Assuming you have a dataframe 'lets_See' with a column 'weirdest'
+# Create x values
+x = seq(0, length(unique(ratings$movie_id)), 1)
+
+# Apply the function over each x
+y = sapply(x, function(val) my_function(lets_See, val))
+
+# Plot
+df <- data.frame(x = x, y = y)
+ggplot(df, aes(x = x, y = y)) + geom_line() + xlab('Inventory Size') + ylab('Percent of User Satisfied')
+
+# 90% Satisfaction
+# Define your function (no change needed here)
+my_function1 <- function(lets_See, x){
+  lets_See <- lets_See %>% mutate(is_satisfied = ifelse(, 1, 0))
+  sum(lets_See$is_satisfied) / nrow(lets_See)
+}
+
+# Assuming you have a dataframe 'lets_See' with a column 'weirdest'
+# Create x values
+x1 = seq(0, length(unique(ratings$movie_id)), 1)
+x1
+
+# Apply the function over each x
+y1 = sapply(x1, function(val) my_function1(lets_See, val))
+y1
+
+# Plot
+df <- data.frame(x = x1, y = y1)
+ggplot(df, aes(x = x, y = y)) + geom_line() + xlab('Inventory Size') + ylab('Percent of User Satisfied')
 ```
