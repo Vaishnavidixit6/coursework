@@ -113,7 +113,6 @@ rating_user <- inner_join(ratings,ratings_movie, by = c('movie_id'))
 head(rating_user)
 
 lets_See <- rating_user %>% select(- 'timestamp') %>% select(- 'count') %>% select(- 'rating') %>% group_by(user_id) %>% mutate(rank = row_number(rank_by_movies))%>% summarize(weirdest = max(rank_by_movies))
-lets_See
 
 library(ggplot2)
 
@@ -133,25 +132,41 @@ y = sapply(x, function(val) my_function(lets_See, val))
 
 # Plot
 df <- data.frame(x = x, y = y)
+head(df)
 ggplot(df, aes(x = x, y = y)) + geom_line() + xlab('Inventory Size') + ylab('Percent of User Satisfied')
 
 # 90% Satisfaction
 # Define your function (no change needed here)
-my_function1 <- function(lets_See, x){
-  lets_See <- lets_See %>% mutate(is_satisfied = ifelse(, 1, 0))
-  sum(lets_See$is_satisfied) / nrow(lets_See)
+ratings_movie <- ratings %>% group_by(movie_id) %>% summarise(count = n()) %>% arrange(desc(count)) %>%  mutate(rank_by_movies = row_number())
+
+rating_user <- inner_join(ratings,ratings_movie, by = c('movie_id'))
+head(rating_user)
+
+lets_See1 <- rating_user %>% select(- 'timestamp') %>% select(- 'count') %>% select(- 'rating') %>% group_by(user_id) %>% mutate(rank = row_number(rank_by_movies))%>% summarize(weirdest = quantile(rank_by_movies, 0.9))
+
+library(ggplot2)
+
+# Define your function (no change needed here)
+my_function1 <- function(lets_See1, x){
+  lets_See1 <- lets_See1 %>% mutate(is_satisfied = ifelse(weirdest <= x, 1, 0))
+  sum(lets_See1$is_satisfied) / nrow(lets_See1)
 }
 
 # Assuming you have a dataframe 'lets_See' with a column 'weirdest'
 # Create x values
 x1 = seq(0, length(unique(ratings$movie_id)), 1)
-x1
 
 # Apply the function over each x
-y1 = sapply(x1, function(val) my_function1(lets_See, val))
-y1
+y1 = sapply(x1, function(val) my_function1(lets_See1, val))
+
+x2 = c(x,x1)
+y2 = c(y,y1)
 
 # Plot
-df <- data.frame(x = x1, y = y1)
-ggplot(df, aes(x = x, y = y)) + geom_line() + xlab('Inventory Size') + ylab('Percent of User Satisfied')
-```
+df2 <- data.frame(x = x2, y = y2)
+head(df2)
+nrow(df2)
+ggplot(df2, aes(x = x, y = y)) +
+  geom_point(color = "black", size = 1) + 
+  xlab('Inventory Size') +
+  ylab('Percent of User Satisfied')
